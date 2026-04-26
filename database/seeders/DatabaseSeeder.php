@@ -14,13 +14,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        User::factory()->create([
-            'name' => 'أحمد علي',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt('password'),
-            'role' => 'admin',
-            'is_active' => true,
-        ]);
+       
         ClinicSetting::create([
             'name' => 'ديفاميد الطبية',
             'description' => 'رعاية صحية حديثة وموثوقة',
@@ -64,5 +58,15 @@ class DatabaseSeeder extends Seeder
                 'end_time' => '18:00:00',
             ]);
         }
+
+        
+ User::create([
+            'name' => 'أحمد علي',
+            'email' => 'admin@gmail.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
     }
+
 }
