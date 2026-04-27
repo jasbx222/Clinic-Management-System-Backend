@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePatientRequest;
+use App\Http\Requests\UpdatePatientRequest;
 use App\Http\Resources\PatientResource;
 use App\Models\Patient;
+use App\Services\PatientService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class PatientController extends Controller
 {
+    public function __construct(private PatientService $patientService) {}
+
     public function index(Request $request)
     {
         Gate::authorize('viewAny', Patient::class);
@@ -44,48 +49,15 @@ class PatientController extends Controller
         return PatientResource::collection($patients);
     }
 
-    public function store(Request $request)
+    public function store(StorePatientRequest $request)
     {
         Gate::authorize('create', Patient::class);
 
-        $validated = $request->validate([
-            'name' => 'required_without:user_id|string|max:255',
-            'phone' => 'required_without:user_id|string|max:255',
-            'email' => 'nullable|email',
-            'user_id' => 'nullable|exists:users,id',
-            'date_of_birth' => 'nullable|date',
-            'birth_date' => 'nullable|date',
-            'gender' => 'required|in:male,female,other',
-            'blood_group' => 'nullable|string',
-            'allergies' => 'nullable|string',
-            'chronic_diseases' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
-        \Illuminate\Support\Facades\DB::beginTransaction();
-        try {
-            if (empty($validated['user_id'])) {
-                $user = \App\Models\User::create([
-                    'name' => $validated['name'],
-                    'phone' => $validated['phone'],
-                    'email' => $validated['email'] ?? null,
-                    'password' => \Illuminate\Support\Facades\Hash::make('password'),
-                    'role' => 'patient',
-                ]);
-                $validated['user_id'] = $user->id;
-            }
+        $patient = $this->patientService->createPatient($validated);
 
-            $validated['date_of_birth'] = $validated['date_of_birth'] ?? $validated['birth_date'] ?? null;
-            $validated['file_number'] = 'PT-'.strtoupper(uniqid());
-
-            $patient = Patient::create($validated);
-
-            \Illuminate\Support\Facades\DB::commit();
-
-            return new PatientResource($patient);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            throw $e;
-        }
+        return new PatientResource($patient);
     }
 
     public function show(Patient $patient)
@@ -97,35 +69,13 @@ class PatientController extends Controller
         return new PatientResource($patient);
     }
 
-    public function update(Request $request, Patient $patient)
+    public function update(UpdatePatientRequest $request, Patient $patient)
     {
         Gate::authorize('update', $patient);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string|max:255',
-            'email' => 'nullable|email',
-            'date_of_birth' => 'sometimes|date',
-            'birth_date' => 'sometimes|date',
-            'gender' => 'sometimes|in:male,female,other',
-            'blood_group' => 'nullable|string',
-            'allergies' => 'nullable|string',
-            'chronic_diseases' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
-        if (isset($validated['name']) || isset($validated['phone']) || isset($validated['email'])) {
-            $patient->user->update([
-                'name' => $validated['name'] ?? $patient->user->name,
-                'phone' => $validated['phone'] ?? $patient->user->phone,
-                'email' => $validated['email'] ?? $patient->user->email,
-            ]);
-        }
-
-        if (isset($validated['birth_date'])) {
-            $validated['date_of_birth'] = $validated['birth_date'];
-        }
-
-        $patient->update($validated);
+        $patient = $this->patientService->updatePatient($patient, $validated);
 
         return new PatientResource($patient);
     }

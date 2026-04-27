@@ -12,7 +12,7 @@ class UpdateVisitRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,11 @@ class UpdateVisitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'chief_complaint' => 'sometimes|string',
+            'history' => 'sometimes|string',
+            'examination' => 'sometimes|string',
+            'diagnosis' => 'sometimes|string',
+            'treatment_plan' => 'sometimes|string',
         ];
     }
 }

@@ -2,26 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Models\Invoice;
 use App\Models\Payment;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class PaymentController extends Controller
 {
-    public function store(Request $request)
+    public function store(StorePaymentRequest $request)
     {
         Gate::authorize('create', Payment::class);
 
-        $validated = $request->validate([
-            'invoice_id' => 'required|exists:invoices,id',
-            'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|in:cash,card,transfer',
-            'transaction_id' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $invoice = Invoice::findOrFail($validated['invoice_id']);
 

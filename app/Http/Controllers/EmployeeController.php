@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Http\Requests\StoreEmployeeRequest;
+use App\Http\Requests\UpdateEmployeeRequest;
 use App\Http\Resources\UserResource;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 
@@ -23,17 +24,9 @@ class EmployeeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEmployeeRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|string|max:20|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,receptionist,doctor,nurse,accountant',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'string',
-        ]);
+        $validated = $request->validated();
 
         $employee = User::create([
             'name' => $validated['name'],
@@ -69,22 +62,13 @@ class EmployeeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $employee)
+    public function update(UpdateEmployeeRequest $request, User $employee)
     {
         if ($employee->role === 'patient') {
             return response()->json(['message' => 'Not an employee'], 400);
         }
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,'.$employee->id,
-            'phone' => 'nullable|string|max:20|unique:users,phone,'.$employee->id,
-            'password' => 'nullable|string|min:8',
-            'role' => 'sometimes|in:admin,receptionist,doctor,nurse,accountant',
-            'is_active' => 'sometimes|boolean',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'string',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);

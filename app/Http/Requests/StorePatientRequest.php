@@ -12,7 +12,7 @@ class StorePatientRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,16 @@ class StorePatientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required_without:user_id|string|max:255',
+            'phone' => 'required_without:user_id|string|max:255',
+            'email' => 'nullable|email',
+            'user_id' => 'nullable|exists:users,id',
+            'date_of_birth' => 'nullable|date',
+            'birth_date' => 'nullable|date',
+            'gender' => 'required|in:male,female,other',
+            'blood_group' => 'nullable|string',
+            'allergies' => 'nullable|string',
+            'chronic_diseases' => 'nullable|string',
         ];
     }
 }

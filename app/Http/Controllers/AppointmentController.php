@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAppointmentRequest;
+use App\Http\Requests\UpdateAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
-use App\Mail\AppointmentStatusMail;
 use App\Models\Appointment;
 use App\Notifications\AppointmentConfirmed;
+use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\ValidationException;
 
 class AppointmentController extends Controller
 {
+    public function __construct(private AppointmentService $appointmentService) {}
+
     public function index(Request $request)
     {
         Gate::authorize('viewAny', Appointment::class);
@@ -40,34 +42,13 @@ class AppointmentController extends Controller
         return AppointmentResource::collection($appointments);
     }
 
-    public function store(Request $request)
+    public function store(StoreAppointmentRequest $request)
     {
         Gate::authorize('create', Appointment::class);
 
-        $validated = $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'doctor_id' => 'required|exists:users,id',
-            'service_id' => 'nullable|exists:services,id',
-            'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required|date_format:H:i',
-            'reason' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
-        // Check for conflict
-        $conflict = Appointment::where('doctor_id', $validated['doctor_id'])
-            ->where('appointment_date', $validated['appointment_date'])
-            ->where('appointment_time', $validated['appointment_time'])
-            ->whereNotIn('status', ['cancelled', 'no_show'])
-            ->exists();
-
-        if ($conflict) {
-            throw ValidationException::withMessages([
-                'appointment_time' => ['This time slot is already booked for this doctor.'],
-            ]);
-        }
-
-        $validated['status'] = 'pending';
-        $appointment = Appointment::create($validated);
+        $appointment = $this->appointmentService->createAppointment($validated);
 
         // Notify patient
         // $appointment->patient->user->notify(new AppointmentConfirmed($appointment));
@@ -75,26 +56,13 @@ class AppointmentController extends Controller
         return new AppointmentResource($appointment);
     }
 
-    public function update(Request $request, Appointment $appointment)
+    public function update(UpdateAppointmentRequest $request, Appointment $appointment)
     {
         Gate::authorize('update', $appointment);
 
-        $validated = $request->validate([
-            'status' => 'sometimes|in:pending,confirmed,arrived,waiting,in_consultation,completed,cancelled,no_show',
-        ]);
+        $validated = $request->validated();
 
-        $oldStatus = $appointment->status;
-        $appointment->update($validated);
-
-        if (isset($validated['status']) && $validated['status'] !== $oldStatus) {
-            $status = $validated['status'];
-            if (in_array($status, ['confirmed', 'cancelled', 'completed'])) {
-                $patientEmail = $appointment->patient->user->email;
-                if ($patientEmail) {
-                    Mail::to($patientEmail)->send(new AppointmentStatusMail($appointment, $status));
-                }
-            }
-        }
+        $appointment = $this->appointmentService->updateStatus($appointment, $validated);
 
         return new AppointmentResource($appointment);
     }

@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PublicAvailabilityRequest;
 use App\Models\Appointment;
 use App\Models\DoctorSchedule;
 use App\Models\Service;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 
 class PublicAvailabilityController extends Controller
 {
-    public function index(Request $request)
+    public function index(PublicAvailabilityRequest $request)
     {
-        $request->validate([
-            'doctor_id' => 'required|exists:users,id',
-            'service_id' => 'required|exists:services,id',
-            'date' => 'required|date|after_or_equal:today',
-        ]);
+        $validated = $request->validated();
 
         $date = Carbon::parse($request->date);
         $dayName = $date->format('l');

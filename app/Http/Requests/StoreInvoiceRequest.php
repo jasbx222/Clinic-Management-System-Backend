@@ -12,7 +12,7 @@ class StoreInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,12 @@ class StoreInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'patient_id' => 'required|exists:patients,id',
+            'appointment_id' => 'nullable|exists:appointments,id',
+            'visit_id' => 'nullable|exists:visits,id',
+            'subtotal' => 'required|numeric|min:0',
+            'tax' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
         ];
     }
 }

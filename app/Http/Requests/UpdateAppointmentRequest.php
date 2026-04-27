@@ -12,7 +12,7 @@ class UpdateAppointmentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,7 @@ class UpdateAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'status' => 'sometimes|in:pending,confirmed,arrived,waiting,in_consultation,completed,cancelled,no_show',
         ];
     }
 }

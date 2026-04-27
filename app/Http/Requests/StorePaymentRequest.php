@@ -12,7 +12,7 @@ class StorePaymentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,11 @@ class StorePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'invoice_id' => 'required|exists:invoices,id',
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|in:cash,card,transfer',
+            'transaction_id' => 'nullable|string',
+            'notes' => 'nullable|string',
         ];
     }
 }

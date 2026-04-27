@@ -2,29 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePrescriptionRequest;
 use App\Http\Resources\PrescriptionResource;
 use App\Models\Prescription;
 use App\Models\Visit;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class PrescriptionController extends Controller
 {
-    public function store(Request $request)
+    public function store(StorePrescriptionRequest $request)
     {
         Gate::authorize('create', Prescription::class);
 
-        $validated = $request->validate([
-            'visit_id' => 'required|exists:visits,id',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.name' => 'required|string',
-            'items.*.dosage' => 'required|string',
-            'items.*.frequency' => 'required|string',
-            'items.*.duration' => 'required|string',
-            'items.*.instructions' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $visit = Visit::findOrFail($validated['visit_id']);
 

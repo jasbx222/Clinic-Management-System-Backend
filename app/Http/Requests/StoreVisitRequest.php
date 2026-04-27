@@ -12,7 +12,7 @@ class StoreVisitRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,12 @@ class StoreVisitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'appointment_id' => 'nullable|exists:appointments,id',
+            'patient_id' => 'required_without:appointment_id|exists:patients,id',
+            'doctor_id' => 'nullable|exists:users,id',
+            'chief_complaint' => 'required|string',
+            'history' => 'nullable|string',
+            'examination' => 'nullable|string',
         ];
     }
 }
