@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Mail\AppointmentStatusMail;
 use App\Models\Appointment;
 use App\Models\Patient;
+use App\Models\PatientJourneyEvent;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentService
@@ -54,6 +56,14 @@ class AppointmentService
                 'appointment_time' => $validated['time'],
                 'status' => 'pending',
                 'reason' => $validated['patient']['reason'] ?? '',
+                'checkin_token' => Str::random(32),
+            ]);
+
+            PatientJourneyEvent::create([
+                'appointment_id' => $appointment->id,
+                'patient_id' => $appointment->patient_id,
+                'event_type' => 'booked',
+                'note' => 'Appointment booked via public portal',
             ]);
 
             return $appointment->load(['doctor', 'service']);
@@ -86,8 +96,19 @@ class AppointmentService
         $this->checkConflict($validated['doctor_id'], $validated['appointment_date'], $validated['appointment_time']);
 
         $validated['status'] = 'pending';
+        $validated['checkin_token'] = Str::random(32);
 
-        return Appointment::create($validated);
+        $appointment = Appointment::create($validated);
+
+        PatientJourneyEvent::create([
+            'appointment_id' => $appointment->id,
+            'patient_id' => $appointment->patient_id,
+            'event_type' => 'booked',
+            'note' => 'Appointment booked via dashboard',
+            'created_by' => auth()->id() ?? null,
+        ]);
+
+        return $appointment;
     }
 
     /**

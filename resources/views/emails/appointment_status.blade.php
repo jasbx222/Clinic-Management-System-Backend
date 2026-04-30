@@ -43,6 +43,25 @@
 
             @if($status === 'confirmed')
                 <p>نرجو منك الحضور قبل الموعد بـ 15 دقيقة. نتمنى لك دوام الصحة والعافية.</p>
+
+                @if($appointment->checkin_token)
+                <div style="margin-top: 30px; text-align: center; border: 2px dashed #10B981; padding: 20px; border-radius: 12px; background-color: #ECFDF5;">
+                    <h3 style="color: #065F46; margin-top: 0;">الدخول الذكي (Contactless Check-in)</h3>
+                    <p style="font-size: 14px; color: #047857;">عند وصولك للعيادة، يرجى مسح الرمز أدناه بكاميرا هاتفك أو الضغط على الرابط لتأكيد وصولك مباشرةً دون الحاجة للانتظار في الاستقبال.</p>
+                    
+                    @php
+                        // يمكن تخصيص رابط الفرونت اند من ملف الـ .env عبر المتغير FRONTEND_URL
+                        $checkinUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/checkin/' . $appointment->checkin_token;
+                    @endphp
+
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($checkinUrl) }}" alt="Check-in QR Code" style="margin: 15px 0; border-radius: 8px; border: 4px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    
+                    <br>
+                    <a href="{{ $checkinUrl }}" style="display: inline-block; background: #10B981; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                        فتح رابط تسجيل الوصول
+                    </a>
+                </div>
+                @endif
             @elseif($status === 'cancelled')
                 <p>نعتذر عن إلغاء الموعد. يمكنك حجز موعد آخر عبر التطبيق أو بالاتصال بنا.</p>
             @elseif($status === 'completed')

@@ -24,6 +24,20 @@ class InvoiceController extends Controller
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
+        // filter by id    
+        
+// http://localhost:8000/api/invoices?InvoiceId=INV-00002
+        
+
+        if ($request->has('invoice_id')) {
+            $query->where('id', $request->invoice_id);
+        }
+        
+        if($request ->has('patient_name')) {
+            $query->whereHas('patient.user', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->patient_name . '%');
+            });
+        }
 
         if ($request->user()->role === 'patient') {
             $query->whereHas('patient', function ($q) use ($request) {

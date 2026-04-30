@@ -14,7 +14,7 @@ class InvoiceResource extends JsonResource
             'invoice_number' => $this->invoice_number,
             'patient_id' => $this->patient_id,
             'appointment_id' => $this->appointment_id,
-            'total_amount' => $this->total_amount,
+            'subtotal' => $this->subtotal,
             'discount' => $this->discount,
             'tax' => $this->tax,
             'final_amount' => $this->final_amount,

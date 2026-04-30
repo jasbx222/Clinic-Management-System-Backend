@@ -20,10 +20,13 @@ class Appointment extends Model
         'status',
         'reason',
         'queue_number',
+        'checkin_token',
+        'checked_in_at',
     ];
 
     protected $casts = [
         'appointment_date' => 'date',
+        'checked_in_at' => 'datetime',
     ];
 
     public function patient()
