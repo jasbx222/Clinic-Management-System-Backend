@@ -26,8 +26,18 @@ class QueueController extends Controller
             $query->where('status', $request->status);
         }
 
-        $items = $query->orderByRaw("FIELD(status, 'called', 'in_consultation', 'waiting', 'billing', 'completed', 'skipped', 'cancelled')")
-            ->orderByRaw("FIELD(priority, 'vip', 'elderly', 'urgent', 'normal')")
+        $items = $query->orderByRaw("
+    array_position(
+        ARRAY['called','in_consultation','waiting','billing','completed','skipped','cancelled'],
+        status
+    )
+")
+->orderByRaw("
+    array_position(
+        ARRAY['vip','elderly','urgent','normal'],
+        priority
+    )
+")
             ->orderBy('created_at', 'asc')
             ->get();
 
